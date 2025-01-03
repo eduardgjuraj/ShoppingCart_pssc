@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ShoppingCart.Domain.Workflow
+namespace ShoppingCart.Api.Models
 {
-    internal class OrderPlacedEvent
+    internal class CartResponseDto
     {
     }
 }
