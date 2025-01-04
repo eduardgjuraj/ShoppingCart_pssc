@@ -3,6 +3,8 @@ using ShoppingCart.Domain.Models;
 using ShoppingCart.Domain.ValueObjects;
 using ShoppingCart.Domain.Workflows;
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace ShoppingCart.Api.Controllers
 {
@@ -20,6 +22,15 @@ namespace ShoppingCart.Api.Controllers
         [HttpPost("{cartId}/place-order")]
         public IActionResult PlaceOrder(Guid cartId, [FromBody] PlaceOrderRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new
+                {
+                    Error = "Invalid request data.",
+                    Details = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage))
+                });
+            }
+
             try
             {
                 // Create Address from the request
@@ -42,19 +53,31 @@ namespace ShoppingCart.Api.Controllers
                     ShippingAddress = checkedOutCart.ShippingAddress.ToString()
                 });
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+
+                return StatusCode(500, new { Error = "An unexpected error occurred. Please try again later." });
             }
         }
     }
 
-    // DTO for the API request
     public class PlaceOrderRequest
     {
+        [Required, MaxLength(255)]
         public string Street { get; set; }
+
+        [Required, MaxLength(100)]
         public string City { get; set; }
+
+        [Required, MaxLength(20)]
         public string PostalCode { get; set; }
+
+        [Required, MaxLength(100)]
         public string Country { get; set; }
     }
 }

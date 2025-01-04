@@ -10,55 +10,36 @@ namespace ShoppingCart.Data
         {
         }
 
-        // DbSets for your tables
         public DbSet<ShoppingCartDto> ShoppingCarts { get; set; }
         public DbSet<CartItemDto> CartItems { get; set; }
         public DbSet<CheckedOutShoppingCartDto> CheckedOutShoppingCarts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure ShoppingCartDto table
-            modelBuilder.Entity<ShoppingCartDto>(entity =>
-            {
-                entity.HasKey(sc => sc.Id); // Primary Key
-                entity.Property(sc => sc.UserId)
-                    .IsRequired()
-                    .HasMaxLength(100); // UserId column constraints
-                entity.Property(sc => sc.CreatedAt)
-                    .HasDefaultValueSql("GETDATE()"); // Default value for CreatedAt
-            });
-
-            // Configure CartItemDto table
             modelBuilder.Entity<CartItemDto>(entity =>
             {
-                entity.HasKey(ci => ci.Id); // Primary Key
-                entity.Property(ci => ci.ShoppingCartId)
-                    .IsRequired(); // Reference to ShoppingCartId
-                entity.Property(ci => ci.ProductName)
-                    .IsRequired()
-                    .HasMaxLength(255); // ProductName constraints
-                entity.Property(ci => ci.ProductDescription)
-                    .HasMaxLength(1000); // ProductDescription constraints
-                entity.Property(ci => ci.PricePerUnit)
-                    .HasColumnType("decimal(18, 2)"); // Specify decimal precision
-                entity.Property(ci => ci.Quantity)
-                    .IsRequired(); // Quantity constraints
+                entity.HasKey(ci => ci.Id);
+                entity.Property(ci => ci.ProductName).IsRequired().HasMaxLength(255);
+                entity.Property(ci => ci.ProductDescription).HasMaxLength(1000);
+                entity.Property(ci => ci.PricePerUnit).HasColumnType("decimal(18, 2)");
+                entity.HasOne<ShoppingCartDto>()
+                      .WithMany()
+                      .HasForeignKey(ci => ci.ShoppingCartId);
             });
 
-            // Configure CheckedOutShoppingCartDto table
+            modelBuilder.Entity<ShoppingCartDto>(entity =>
+            {
+                entity.HasKey(sc => sc.Id);
+                entity.Property(sc => sc.UserId).IsRequired().HasMaxLength(100);
+                entity.Property(sc => sc.CreatedAt).HasDefaultValueSql("GETDATE()");
+            });
+
             modelBuilder.Entity<CheckedOutShoppingCartDto>(entity =>
             {
-                entity.HasKey(cosc => cosc.Id); // Primary Key
-                entity.Property(cosc => cosc.UserId)
-                    .IsRequired()
-                    .HasMaxLength(100); // UserId column constraints
-                entity.Property(cosc => cosc.TotalAmount)
-                    .HasColumnType("decimal(18, 2)"); // Specify decimal precision
-                entity.Property(cosc => cosc.CheckedOutDate)
-                    .HasDefaultValueSql("GETDATE()"); // Default value for CheckedOutDate
-                entity.Property(cosc => cosc.ShippingAddress)
-                    .IsRequired()
-                    .HasMaxLength(1000); // ShippingAddress constraints
+                entity.HasKey(cosc => cosc.Id);
+                entity.Property(cosc => cosc.UserId).IsRequired().HasMaxLength(100);
+                entity.Property(cosc => cosc.TotalAmount).HasColumnType("decimal(18, 2)");
+                entity.Property(cosc => cosc.ShippingAddress).HasMaxLength(1000);
             });
         }
     }

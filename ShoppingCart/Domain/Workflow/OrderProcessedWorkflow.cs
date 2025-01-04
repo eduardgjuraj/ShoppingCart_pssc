@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ShoppingCart.Domain.Workflow
 {
-    internal class EmailConfirmationEvent
+    internal class OrderProcessedWorkflow
     {
     }
 }
