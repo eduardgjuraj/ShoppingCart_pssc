@@ -11,11 +11,13 @@ namespace ShoppingCart.Domain.Workflows
     {
         private readonly ICartRepository _cartRepository;
         private readonly IOrderPublisher _orderPublisher;
+        private readonly AzureQueuePublisher _queuePublisher;
 
-        public OrderPlacedWorkflow(ICartRepository cartRepository, IOrderPublisher orderPublisher)
+        public OrderPlacedWorkflow(ICartRepository cartRepository, IOrderPublisher orderPublisher, AzureQueuePublisher queuePublisher)
         {
             _cartRepository = cartRepository;
             _orderPublisher = orderPublisher;
+            _queuePublisher = queuePublisher;
         }
 
         public CheckedOutShoppingCart PlaceOrder(Guid cartId, Address shippingAddress)
@@ -32,6 +34,9 @@ namespace ShoppingCart.Domain.Workflows
             PublishOrderPlacedEvent(checkedOutCart);
 
             _cartRepository.UpdateCartToCheckedOut(checkedOutCart);
+
+            // Notify OrderProcessedWorkflow
+            NotifyOrderProcessedWorkflow(checkedOutCart);
 
             return checkedOutCart;
         }
@@ -82,5 +87,12 @@ namespace ShoppingCart.Domain.Workflows
 
             _orderPublisher.Publish(orderPlacedEvent);
         }
+
+        private void NotifyOrderProcessedWorkflow(CheckedOutShoppingCart checkedOutCart)
+        {
+            // Send a message to the OrderProcessedWorkflow
+            _queuePublisher.PublishMessageAsync("OrderProcessedQueue", checkedOutCart);
+        }
     }
+
 }

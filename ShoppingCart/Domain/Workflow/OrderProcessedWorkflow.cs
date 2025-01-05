@@ -1,12 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ShoppingCart.Domain.Workflow
+﻿using Azure.Messaging.ServiceBus;
+using System.Text.Json;
+using ShoppingCart.Domain.Models;
+public class OrderProcessedWorkflow
 {
-    internal class OrderProcessedWorkflow
+    private readonly AzureQueuePublisher _queuePublisher;
+
+    public OrderProcessedWorkflow(AzureQueuePublisher queuePublisher)
     {
+        _queuePublisher = queuePublisher;
+    }
+
+    public async Task ProcessOrderAsync(CheckedOutShoppingCart checkedOutCart)
+    {
+        
+        Console.WriteLine($"Processing Order: {checkedOutCart.Id}");
+
+        
+        await _queuePublisher.PublishMessageAsync("OrderProcessedQueue", checkedOutCart);
+
+        Console.WriteLine($"Order published to Azure Service Bus: {checkedOutCart.Id}");
     }
 }
