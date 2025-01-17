@@ -22,18 +22,14 @@ namespace ShoppingCart.Api.Controllers
         [HttpPost("{cartId}/place-order")]
         public IActionResult PlaceOrder(Guid cartId, [FromBody] PlaceOrderRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new
-                {
-                    Error = "Invalid request data.",
-                    Details = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage))
-                });
-            }
-
             try
             {
-                // Create Address from the request
+                if (request == null)
+                {
+                    return BadRequest("Shipping address is required.");
+                }
+
+                // Create the Address object from the request body
                 var shippingAddress = new Address(
                     request.Street,
                     request.City,
@@ -41,9 +37,10 @@ namespace ShoppingCart.Api.Controllers
                     request.Country
                 );
 
-                // Call the workflow
+                // Call the OrderPlacedWorkflow
                 var checkedOutCart = _orderWorkflow.PlaceOrder(cartId, shippingAddress);
 
+                // Return success response with the checked-out cart details
                 return Ok(new
                 {
                     Message = "Order placed successfully.",
@@ -53,15 +50,9 @@ namespace ShoppingCart.Api.Controllers
                     ShippingAddress = checkedOutCart.ShippingAddress.ToString()
                 });
             }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { Error = ex.Message });
-            }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
-
-                return StatusCode(500, new { Error = "An unexpected error occurred. Please try again later." });
+                return BadRequest(new { Error = ex.Message });
             }
         }
     }

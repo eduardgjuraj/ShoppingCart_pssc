@@ -12,12 +12,14 @@ namespace ShoppingCart.Domain.Workflows
         private readonly ICartRepository _cartRepository;
         private readonly IOrderPublisher _orderPublisher;
         private readonly AzureQueuePublisher _queuePublisher;
+        private readonly InvoiceGenerationWorkflow _invoiceGenerationWorkflow;
 
-        public OrderPlacedWorkflow(ICartRepository cartRepository, IOrderPublisher orderPublisher, AzureQueuePublisher queuePublisher)
+        public OrderPlacedWorkflow(InvoiceGenerationWorkflow invoiceGenerationWorkflow, ICartRepository cartRepository, IOrderPublisher orderPublisher, AzureQueuePublisher queuePublisher)
         {
             _cartRepository = cartRepository;
             _orderPublisher = orderPublisher;
             _queuePublisher = queuePublisher;
+            _invoiceGenerationWorkflow = invoiceGenerationWorkflow;
         }
 
         public CheckedOutShoppingCart PlaceOrder(Guid cartId, Address shippingAddress)
@@ -35,8 +37,9 @@ namespace ShoppingCart.Domain.Workflows
 
             _cartRepository.UpdateCartToCheckedOut(checkedOutCart);
 
-            // Notify OrderProcessedWorkflow
             NotifyOrderProcessedWorkflow(checkedOutCart);
+
+            NotifyInvoiceGenerator(checkedOutCart);
 
             return checkedOutCart;
         }
@@ -88,11 +91,17 @@ namespace ShoppingCart.Domain.Workflows
             _orderPublisher.Publish(orderPlacedEvent);
         }
 
-        private void NotifyOrderProcessedWorkflow(CheckedOutShoppingCart checkedOutCart)
+        private async Task NotifyOrderProcessedWorkflow(CheckedOutShoppingCart checkedOutCart)
         {
-            // Send a message to the OrderProcessedWorkflow
-            _queuePublisher.PublishMessageAsync("OrderProcessedQueue", checkedOutCart);
+            await _queuePublisher.PublishMessageAsync("OrderProcessedQueue", checkedOutCart);
         }
+
+        private void NotifyInvoiceGenerator(CheckedOutShoppingCart checkedOutCart)
+        {
+            _invoiceGenerationWorkflow.GenerateInvoice(checkedOutCart);
+            Console.WriteLine($"Invoice generation triggered for Order {checkedOutCart.Id}");
+        }
+
     }
 
 }

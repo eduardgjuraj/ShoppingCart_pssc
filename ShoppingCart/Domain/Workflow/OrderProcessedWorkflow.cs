@@ -14,10 +14,10 @@ public class OrderProcessedWorkflow
     {
         
         Console.WriteLine($"Processing Order: {checkedOutCart.Id}");
-
-        
+       
         await _queuePublisher.PublishMessageAsync("OrderProcessedQueue", checkedOutCart);
 
         Console.WriteLine($"Order published to Azure Service Bus: {checkedOutCart.Id}");
+
     }
 }

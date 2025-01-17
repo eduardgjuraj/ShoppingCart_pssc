@@ -28,8 +28,8 @@ namespace ShoppingCart.Api.Controllers
                 return BadRequest("ShoppingCart data is required.");
             }
 
-            shoppingCart.Id = Guid.NewGuid(); // Generate a new ID for the cart
-            shoppingCart.CreatedAt = DateTime.UtcNow; // Set the creation date
+            shoppingCart.Id = Guid.NewGuid(); 
+            shoppingCart.CreatedAt = DateTime.UtcNow; 
 
             await _context.ShoppingCarts.AddAsync(shoppingCart);
             await _context.SaveChangesAsync();

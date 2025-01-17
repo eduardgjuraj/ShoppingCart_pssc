@@ -25,8 +25,8 @@ Console.WriteLine($"Connection String: {connectionString}");
 
 
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer(); // Required for Swagger
-builder.Services.AddSwaggerGen();           // Registers Swagger generator
+builder.Services.AddEndpointsApiExplorer(); 
+builder.Services.AddSwaggerGen();           
 
 builder.Services.AddDbContext<ShoppingCartDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ShoppingCartDatabase")));
@@ -34,6 +34,7 @@ builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<OrderPlacedWorkflow>();
 builder.Services.AddScoped<IOrderPublisher, OrderPublisher>();
 builder.Services.AddScoped<OrderProcessedWorkflow>();
+builder.Services.AddScoped<InvoiceGenerationWorkflow>();
 
 // azure service bus
 builder.Services.AddSingleton(provider =>
@@ -54,6 +55,7 @@ using (var scope = app.Services.CreateScope())
     var subscriber = scope.ServiceProvider.GetRequiredService<OrderProcessedQueueSubscriber>();
     await subscriber.StartListeningAsync("OrderProcessedQueue");
 }
+
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
